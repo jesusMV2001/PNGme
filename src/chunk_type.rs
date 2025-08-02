@@ -2,7 +2,7 @@ use std::fmt::{Display, Formatter};
 use std::str::FromStr;
 
 #[derive(PartialEq, Eq, Debug)]
-struct ChunkType {
+pub struct ChunkType {
     bytes: [u8; 4],
 }
 
@@ -60,10 +60,6 @@ impl TryFrom<[u8; 4]> for ChunkType {
         Ok(ChunkType { bytes })
     }
 }
-
-#[allow(unused_variables)]
-fn main() {}
-
 #[cfg(test)]
 mod tests {
     use super::*;
