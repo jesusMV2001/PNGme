@@ -1,11 +1,58 @@
 use std::fmt::{Display, Formatter};
 use crate::chunk_type::ChunkType;
+use crc32fast::Hasher;
 
 struct Chunk {
     length: u32,
     chunk_type: ChunkType,
     data: Vec<u8>,
     crc: u32,
+}
+
+impl Chunk {
+    pub fn new(chunk_type: ChunkType, data: Vec<u8>) -> Chunk {
+        let crc = Self::create_crc(&chunk_type, &data);
+        Chunk {
+            length: data.len() as u32,
+            chunk_type,
+            data,
+            crc,
+        }
+    }
+    fn create_crc(chunk_type: &ChunkType, data: &Vec<u8>) -> u32 {
+        let mut hasher = Hasher::new();
+
+        hasher.update(&chunk_type.bytes());
+        hasher.update(data);
+
+        hasher.finalize()
+    }
+    pub fn length(&self) -> u32 {
+        self.length
+    }
+    pub fn crc(&self) -> u32 {
+        self.crc
+    }
+    pub fn chunk_type(&self) -> &ChunkType {
+        &self.chunk_type
+    }
+    pub fn data(&self) -> &Vec<u8> {
+        &self.data
+    }
+    pub fn data_as_string(&self) -> Result<String, std::string::FromUtf8Error> {
+        String::from_utf8(self.data.clone())
+    }
+    pub fn as_bytes(&self) -> Vec<u8> {
+        let mut result = Vec::with_capacity(12 + self.data.len()); // 4 + 4 + data + 4
+
+        result.extend_from_slice(&self.length.to_be_bytes());
+        result.extend_from_slice(&self.chunk_type.bytes());
+        result.extend_from_slice(&self.data);
+        result.extend_from_slice(&self.crc.to_be_bytes());
+
+        result
+    }
+
 }
 
 impl Display for Chunk {
@@ -55,6 +102,10 @@ impl TryFrom<&[u8]> for Chunk {
                 .try_into()
                 .map_err(|_| "No se pudo leer el crc")?
         );
+        let check_crc = Self::create_crc(&chunk_type, &data);
+        if crc != check_crc {
+            return Err("crc invalido")
+        }
 
         Ok(Chunk{
             length,
@@ -65,7 +116,7 @@ impl TryFrom<&[u8]> for Chunk {
     }
 }
 
-/*
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -196,4 +247,3 @@ mod tests {
         let _chunk_string = format!("{}", chunk);
     }
 }
-*/
