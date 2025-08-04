@@ -1,8 +1,9 @@
-use std::fmt::{Display, Formatter};
 use crate::chunk_type::ChunkType;
 use crc32fast::Hasher;
+use std::fmt::{Display, Formatter};
 
-struct Chunk {
+#[derive(Debug)]
+pub(crate) struct Chunk {
     length: u32,
     chunk_type: ChunkType,
     data: Vec<u8>,
@@ -19,7 +20,7 @@ impl Chunk {
             crc,
         }
     }
-    fn create_crc(chunk_type: &ChunkType, data: &Vec<u8>) -> u32 {
+    fn create_crc(chunk_type: &ChunkType, data: &[u8]) -> u32 {
         let mut hasher = Hasher::new();
 
         hasher.update(&chunk_type.bytes());
@@ -52,7 +53,6 @@ impl Chunk {
 
         result
     }
-
 }
 
 impl Display for Chunk {
@@ -60,7 +60,7 @@ impl Display for Chunk {
         write!(
             f,
             "Chunk Type: {}\nLength: {}\nCRC: {}\nData: {:?}",
-            self.chunk_type,       // usa el Display de ChunkType
+            self.chunk_type, // usa el Display de ChunkType
             self.length,
             self.crc,
             String::from_utf8_lossy(&self.data) // muestra el data como texto si es UTF-8
@@ -68,46 +68,45 @@ impl Display for Chunk {
     }
 }
 
-
 impl TryFrom<&[u8]> for Chunk {
     type Error = &'static str;
 
     fn try_from(value: &[u8]) -> Result<Self, Self::Error> {
         // LENGTH
         if value.len() < 8 {
-            return Err("Vector demasiado pequeño")
+            return Err("Vector demasiado pequeño");
         }
         let length = u32::from_be_bytes(
             value[..4]
-            .try_into()
-            .map_err(|_| "No se pudo leer la longitud")?);
+                .try_into()
+                .map_err(|_| "No se pudo leer la longitud")?,
+        );
 
         // CHUNK TYPE
-        let v: [u8;4] = value[4..8]
+        let v: [u8; 4] = value[4..8]
             .try_into()
             .map_err(|_| "No se pudo leer el Chunk Type")?;
         let chunk_type = ChunkType::try_from(v)?;
 
-
         // DATA
         let n = 8 + length as usize;
         if value.len() < n + 4 {
-            return Err("Vector demasiado pequeño, no tiene los datos indicados en la longitud")
+            return Err("Vector demasiado pequeño, no tiene los datos indicados en la longitud");
         }
         let data = value[8..n].to_vec();
 
         // CRC
         let crc = u32::from_be_bytes(
-            value[n..n+4]
+            value[n..n + 4]
                 .try_into()
-                .map_err(|_| "No se pudo leer el crc")?
+                .map_err(|_| "No se pudo leer el crc")?,
         );
         let check_crc = Self::create_crc(&chunk_type, &data);
         if crc != check_crc {
-            return Err("crc invalido")
+            return Err("crc invalido");
         }
 
-        Ok(Chunk{
+        Ok(Chunk {
             length,
             chunk_type,
             data,
@@ -115,7 +114,6 @@ impl TryFrom<&[u8]> for Chunk {
         })
     }
 }
-
 
 #[cfg(test)]
 mod tests {

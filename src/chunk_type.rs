@@ -2,7 +2,7 @@ use std::fmt::{Display, Formatter};
 use std::str::FromStr;
 
 #[derive(PartialEq, Eq, Debug)]
-pub struct ChunkType {
+pub(crate) struct ChunkType {
     bytes: [u8; 4],
 }
 
@@ -20,8 +20,7 @@ impl ChunkType {
         self.bytes[3].is_ascii_lowercase()
     }
     pub fn is_valid(&self) -> bool {
-        self.bytes.iter().all(|b| b.is_ascii_alphabetic()) &&
-            self.is_reserved_bit_valid()
+        self.bytes.iter().all(|b| b.is_ascii_alphabetic()) && self.is_reserved_bit_valid()
     }
     pub fn bytes(&self) -> [u8; 4] {
         self.bytes
@@ -45,7 +44,6 @@ impl FromStr for ChunkType {
             .map_err(|_| "El ChunkType debe tener exactamente 4 caracteres ASCII")?;
         ChunkType::try_from(bytes)
     }
-
 }
 
 impl TryFrom<[u8; 4]> for ChunkType {
