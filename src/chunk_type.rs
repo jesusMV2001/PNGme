@@ -2,6 +2,7 @@ use std::fmt::{Display, Formatter};
 use std::str::FromStr;
 
 #[derive(PartialEq, Eq, Debug)]
+#[derive(Clone)]
 pub(crate) struct ChunkType {
     bytes: [u8; 4],
 }
