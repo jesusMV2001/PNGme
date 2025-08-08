@@ -10,6 +10,7 @@ pub(crate) struct Chunk {
     crc: u32,
 }
 
+#[allow(dead_code)]
 impl Chunk {
     pub fn new(chunk_type: ChunkType, data: Vec<u8>) -> Chunk {
         let crc = Self::create_crc(&chunk_type, &data);
@@ -59,11 +60,11 @@ impl Display for Chunk {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "Chunk Type: {}\nLength: {}\nCRC: {}\nData: {:?}",
-            self.chunk_type, // usa el Display de ChunkType
+            "Chunk Type: {}\nLength: {}\nCRC: {}\nData: {}",
+            self.chunk_type,
             self.length,
             self.crc,
-            String::from_utf8_lossy(&self.data) // muestra el data como texto si es UTF-8
+            String::from_utf8_lossy(&self.data)
         )
     }
 }

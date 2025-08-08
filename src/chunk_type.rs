@@ -7,6 +7,7 @@ pub(crate) struct ChunkType {
     bytes: [u8; 4],
 }
 
+#[allow(dead_code)]
 impl ChunkType {
     pub fn is_critical(&self) -> bool {
         self.bytes[0].is_ascii_uppercase()

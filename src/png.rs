@@ -11,6 +11,7 @@ pub struct Png {
     chunks: Vec<Chunk>,
 }
 
+#[allow(dead_code)]
 impl Png {
     // Fill in this array with the correct values per the PNG spec
     pub const STANDARD_HEADER: [u8; 8] = [137, 80, 78, 71, 13, 10, 26, 10];
@@ -30,7 +31,6 @@ impl Png {
         let mut buffer = Vec::new();
         file.read_to_end(&mut buffer).map_err(|_| "No se pudo leer el archivo")?;
 
-        // Reutilizar tu implementación de TryFrom<&[u8]>
         Png::try_from(buffer.as_slice())
     }
 
@@ -83,6 +83,13 @@ impl Png {
         }
 
         result
+    }
+
+    /// Guarda el PNG sobrescribiendo el archivo en la ruta dada.
+    pub fn save<P: AsRef<Path>>(&self, path: P) -> Result<()> {
+        let bytes = self.as_bytes(); // Método que convierte el PNG en Vec<u8>
+        fs::write(path, bytes).expect("Error al sobreescribir png");     // Escribe los bytes en el archivo
+        Ok(())
     }
 }
 
